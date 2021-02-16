@@ -262,9 +262,7 @@ var _super_order = models.Order.prototype;
 models.Order = models.Order.extend({
     export_as_JSON: function() {
         var json = _super_order.export_as_JSON.apply(this,arguments);
-        if (this.pos.get_empleado()) {
-            json.employee_id = this.pos.get_empleado().id;
-        }
+        json.employee_id = this.pos.get_empleado().id;
         return json;
     },
     export_for_printing: function() {
@@ -474,104 +472,97 @@ screens.define_action_button({
     },
 });
 
-var EmpleadoWidget = screens.ActionButtonWidget.extend({
-    template: 'EmpleadoWidget',
-    init: function(parent, options) {
-        this._super(parent, options);
-        this.pos.bind('change:selectedOrder',this.renderElement,this);
-    },
-    button_click: function(){
-        var self = this;
-        var order = this.pos.get_order();
-        var list = [];
-        for (var i = 0; i < this.pos.empleados.length; i++) {
-            var empleado = this.pos.empleados[i];
-            list.push({
-                'label': empleado.name,
-                'item':  empleado,
-            });
-        }
+button_click: function(){
+    var self = this;
+    var order = this.pos.get_order();
+    var list = [];
+    for (var i = 0; i < this.pos.empleados.length; i++) {
+        var empleado = this.pos.empleados[i];
+        list.push({
+            'label': empleado.name,
+            'item':  empleado,
+        });
+    }
 
-        if (this.pos.config.filtro_empleado){
-            this.gui.show_popup('textinput',{
-                'title': 'Seleccione empleado',
-                'confirm': function(filtro) {
-                    var lista_empleados = []
-                    for (var i=0; i < list.length; i++){
+    if (this.pos.config.filtro_empleado){
+        this.gui.show_popup('textinput',{
+            'title': 'Seleccione empleado',
+            'confirm': function(filtro) {
+                var lista_empleados = []
+                for (var i=0; i < list.length; i++){
 
-                        if (list[i]['item']['codigo_empleado'] != false){
-                            if (list[i]['item']['codigo_empleado'].toLowerCase().includes(filtro) || list[i]['item']['name'].toLowerCase().includes(filtro)  ){
-                                lista_empleados.push(list[i]);
-                            }
-                        }else{
-                            if ( list[i]['item']['name'].toLowerCase().includes(filtro)){
-                                lista_empleados.push(list[i]);
-                            }
+                    if (list[i]['item']['codigo_empleado'] != false){
+                        if (list[i]['item']['codigo_empleado'].toLowerCase().includes(filtro) || list[i]['item']['name'].toLowerCase().includes(filtro)  ){
+                            lista_empleados.push(list[i]);
+                        }
+                    }else{
+                        if ( list[i]['item']['name'].toLowerCase().includes(filtro)){
+                            lista_empleados.push(list[i]);
                         }
                     }
-                    this.gui.show_popup('selection',{
-                        'title': 'Seleccione empleado',
-                        'list': lista_empleados,
-                        'confirm': function(empleado) {
-                            if(empleado['clave_empleado'].length > 0){
-                                self.gui.show_popup('passinput',{
-                                    'title': 'Ingrese clave',
-                                    'confirm': function(clave_empleado) {
-                                        if (clave_empleado == empleado['clave_empleado']){
-                                            self.pos.set_empleado(empleado);
-                                            self.renderElement();
-                                        }else{
-                                            self.renderElement();
-                                        }
-                                    },
-                                });
-                            }else{
+                }
+                this.gui.show_popup('selection',{
+                    'title': 'Seleccione empleado',
+                    'list': lista_empleados,
+                    'confirm': function(empleado) {
+                        if(empleado['clave_empleado'].length > 0){
+                            self.gui.show_popup('passinput',{
+                                'title': 'Ingrese clave',
+                                'confirm': function(clave_empleado) {
+                                    if (clave_empleado == empleado['clave_empleado']){
+                                        self.pos.set_empleado(empleado);
+                                        self.renderElement();
+                                    }else{
+                                        self.renderElement();
+                                    }
+                                },
+                            });
+                        }else{
+                            self.pos.set_empleado(empleado);
+                            self.renderElement();
+                        }
+
+
+                    },
+                });
+
+            },
+        });
+    }else{
+        this.gui.show_popup('selection',{
+            'title': 'Seleccione empleado',
+            'list': list,
+            'confirm': function(empleado) {
+                if(empleado['clave_empleado'].length > 0){
+                    self.gui.show_popup('passinput',{
+                        'title': 'Ingrese clave',
+                        'confirm': function(clave_empleado) {
+                            if (clave_empleado == empleado['clave_empleado']){
                                 self.pos.set_empleado(empleado);
                                 self.renderElement();
+                            }else{
+                                self.renderElement();
                             }
-
-
                         },
                     });
+                }else{
+                    self.pos.set_empleado(empleado);
+                    self.renderElement();
+                }
+            },
+        });
+    }
 
-                },
-            });
-        }else{
-            this.gui.show_popup('selection',{
-                'title': 'Seleccione empleado',
-                'list': list,
-                'confirm': function(empleado) {
-                    if(empleado['clave_empleado'].length > 0){
-                        self.gui.show_popup('passinput',{
-                            'title': 'Ingrese clave',
-                            'confirm': function(clave_empleado) {
-                                if (clave_empleado == empleado['clave_empleado']){
-                                    self.pos.set_empleado(empleado);
-                                    self.renderElement();
-                                }else{
-                                    self.renderElement();
-                                }
-                            },
-                        });
-                    }else{
-                        self.pos.set_empleado(empleado);
-                        self.renderElement();
-                    }
-                },
-            });
-        }
-
-    },
-    get_name: function(){
-        var empleado = this.pos.get_empleado();
-        if(empleado){
-            return empleado.name;
-        }else{
-            return "";
-        }
-    },
+},
+get_name: function(){
+    var empleado = this.pos.get_empleado();
+    if(empleado){
+        return empleado.name;
+    }else{
+        return "";
+    }
+},
 });
-
 screens.define_action_button({
     'name': 'empleanombre',
     'widget': EmpleadoWidget,
